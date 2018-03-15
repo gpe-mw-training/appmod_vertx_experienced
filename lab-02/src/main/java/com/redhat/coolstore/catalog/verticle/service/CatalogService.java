@@ -9,7 +9,7 @@ import io.vertx.core.Handler;
 
 public interface CatalogService {
 
-    final static String ADDRESS = "catalog-service";
+    public final static String ADDRESS = "catalog-service";
 
     public void getProducts(Handler<AsyncResult<List<Product>>> resulthandler);
 

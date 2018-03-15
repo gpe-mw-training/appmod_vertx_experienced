@@ -30,10 +30,18 @@ public class CatalogServiceTest extends MongoTestBase {
 
     // @Before
     public void setup(TestContext context) throws Exception {
+
+        // create a vertex instance
         vertx = Vertx.vertx();
         vertx.exceptionHandler(context.exceptionHandler());
+
+        // get json configs for mongo
         JsonObject config = getConfig();
+
+        // create a mongo client
         mongoClient = MongoClient.createNonShared(vertx, config);
+
+        // drop the collection named 'products'
         Async async = context.async();
         dropCollection(mongoClient, "products", async, context);
         async.await(10000);
@@ -47,6 +55,10 @@ public class CatalogServiceTest extends MongoTestBase {
 
     // @Test
     public void testAddProduct(TestContext context) throws Exception {
+
+        // setup
+
+        // create a product
         String itemId = "999999";
         String name = "productName";
         Product product = new Product();
@@ -59,10 +71,13 @@ public class CatalogServiceTest extends MongoTestBase {
 
         Async async = context.async();
 
+        // execute: add a product
         service.addProduct(product, ar -> {
+
             if (ar.failed()) {
                 context.fail(ar.cause().getMessage());
             } else {
+                // assert that product was added
                 JsonObject query = new JsonObject().put("_id", itemId);
                 mongoClient.findOne("products", query, null, ar1 -> {
                     if (ar1.failed()) {
@@ -79,6 +94,8 @@ public class CatalogServiceTest extends MongoTestBase {
 
     @Test
     public void testPing(TestContext context) throws Exception {
+
+        // test that the ping service succeeded
         CatalogService service = new CatalogServiceImpl(vertx, getConfig(), mongoClient);
 
         Async async = context.async();

@@ -24,14 +24,14 @@ public class CatalogServiceImpl implements CatalogService {
     @Override
     public void getProducts(Handler<AsyncResult<List<Product>>> resulthandler) {
     		
-    		// TODO: Replace this method
+        // TODO: Replace this method
     	
     }
 
     @Override
     public void getProduct(String itemId, Handler<AsyncResult<Product>> resulthandler) {
     	
-		// TODO: Replace this method
+        // TODO: Replace this method
 
     }
 
@@ -47,8 +47,8 @@ public class CatalogServiceImpl implements CatalogService {
 
     private JsonObject toDocument(Product product) {
     	
-		// TODO: Replace this method
-    		return null;
+        // TODO: Replace this method
+        return null;
 
     }
 

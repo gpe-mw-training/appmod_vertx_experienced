@@ -16,7 +16,7 @@ public class CatalogVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-		// TODO: Replace this method
+        // TODO: Replace this method
     	
     }
 
