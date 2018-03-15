@@ -92,7 +92,7 @@ public class CatalogServiceTest extends MongoTestBase {
     }
 
 
-    @Test
+    // @Test
     public void testPing(TestContext context) throws Exception {
 
         // test that the ping service succeeded
