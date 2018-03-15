@@ -1,6 +1,6 @@
 # Vertx Experienced - Labs
 
-This repository contains the _Wildfly Swarm Experienced_ lab exercises. They are managed under 2 distinct branches : 
+This repository contains the _Vert.x Experienced_ lab exercises. They are managed under 2 distinct branches : 
 
 * [Master](https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/master) : skeleton of the lab exercises from where the students will start.
 * [Solution](https://github.com/gpe-mw-training/appmod_vertx_experienced/tree/solution) : what we expect to have at the end of the exercise.
