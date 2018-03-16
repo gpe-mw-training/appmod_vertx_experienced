@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.redhat.coolstore.catalog.model.Product;
 
+import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
