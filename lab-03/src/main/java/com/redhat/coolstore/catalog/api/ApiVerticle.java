@@ -28,19 +28,19 @@ public class ApiVerticle extends AbstractVerticle {
 
     }
 
-    private void addProduct(RoutingContext rc) {
+    private void addProduct(RoutingContext routingContext) {
 
         // TODO: Replace this method
 
     }
 
-    private void getProducts(RoutingContext rc) {
+    private void getProducts(RoutingContext routingContext) {
 
         // TODO: Replace this method
 
     }
 
-    private void getProduct(RoutingContext rc) {
+    private void getProduct(RoutingContext routingContext) {
 
         // TODO: IMPLEMENT this method
 
