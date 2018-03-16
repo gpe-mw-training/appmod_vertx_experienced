@@ -40,5 +40,10 @@ public class ApiVerticle extends AbstractVerticle {
 
     }
 
+    private void getProduct(RoutingContext rc) {
+
+        // TODO: IMPLEMENT this method
+
+    }
 
 }
