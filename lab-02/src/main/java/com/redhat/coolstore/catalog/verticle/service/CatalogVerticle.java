@@ -16,8 +16,17 @@ public class CatalogVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-        // TODO: Replace this method
-    	
+        // create a shared instance of the MongoDB client
+        client = MongoClient.createShared(vertx, config());
+
+        // create an instance of the catalog service
+        service = CatalogService.create(vertx, config(), client);
+
+        // register the catalog service
+        ProxyHelper.registerService(CatalogService.class, vertx, service, CatalogService.ADDRESS);
+
+        startFuture.complete();
+        
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
+@DataObject
 public class Product implements Serializable {
 
     private static final long serialVersionUID = -6994655395272795259L;
@@ -18,6 +19,13 @@ public class Product implements Serializable {
 
     }
 
+    public Product(JsonObject json) {
+        this.itemId = json.getString("itemId");
+        this.name = json.getString("name");
+        this.desc = json.getString("desc");
+        this.price = json.getDouble("price");
+    }
+    
     public String getItemId() {
         return itemId;
     }
@@ -50,4 +58,13 @@ public class Product implements Serializable {
         this.price = price;
     }
 
+    public JsonObject toJson() {
+
+        final JsonObject json = new JsonObject();
+        json.put("itemId", this.itemId);
+        json.put("name", this.name);
+        json.put("desc", this.desc);
+        json.put("price", this.price);
+        return json;
+    }    
 }
