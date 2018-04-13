@@ -29,17 +29,10 @@ public class MongoTestBase {
 
     @BeforeClass
     public static void startMongo() throws Exception {
-
         if (getConnectionString() == null) {
-            // create mongodb configs
             IMongodConfig config = new MongodConfigBuilder().version(Version.Main.PRODUCTION).net(new Net(27018, Network.localhostIsIPv6())).build();
-
-            // configure mongodb client
             exe = MongodStarter.getDefaultInstance().prepare(config);
-
-            // start mongodb
             exe.start();
-        
         }
     }
 
@@ -71,24 +64,17 @@ public class MongoTestBase {
     }
 
     protected JsonObject getConfig() {
-
-        // create json config object
         JsonObject config = new JsonObject();
         String connectionString = getConnectionString();
-        
-        // setup connection string
         if (connectionString != null) {
             config.put("connection_string", connectionString);
         } else {
             config.put("connection_string", "mongodb://localhost:27018");
         }
-
-        // set up database name
         String databaseName = getDatabaseName();
         if (databaseName != null) {
             config.put("db_name", databaseName);
         }
-
         return config;
     }
 
@@ -97,21 +83,14 @@ public class MongoTestBase {
     }
 
     protected void dropCollection(MongoClient mongoClient, String name, Async async, TestContext context) {
-        
-        // drop a mongo collection
         mongoClient.getCollections(ar -> {
-        
             if (ar.failed()) {
                 ar.cause().printStackTrace();
                 context.fail(ar.cause().getMessage());
             } else {
-        
-                // get a list of collections to drop
                 AtomicInteger collCount = new AtomicInteger();
                 List<String> toDrop = ar.result().stream().filter(l -> l.startsWith(name)).collect(Collectors.toList());
                 int count = toDrop.size();
-        
-                // loop thru and drop collections
                 if (!toDrop.isEmpty()) {
                     for (String collection : toDrop) {
                         mongoClient.dropCollection(collection, ar1 -> {

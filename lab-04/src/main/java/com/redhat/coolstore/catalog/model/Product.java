@@ -25,7 +25,7 @@ public class Product implements Serializable {
         this.desc = json.getString("desc");
         this.price = json.getDouble("price");
     }
-    
+
     public String getItemId() {
         return itemId;
     }
@@ -66,5 +66,6 @@ public class Product implements Serializable {
         json.put("desc", this.desc);
         json.put("price", this.price);
         return json;
-    }    
+    }
+
 }

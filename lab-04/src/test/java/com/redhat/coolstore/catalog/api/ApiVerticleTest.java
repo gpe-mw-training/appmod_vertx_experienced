@@ -92,52 +92,7 @@ public class ApiVerticleTest {
     }
 
     @Test
-    public void testAddProduct(TestContext context) throws Exception {
-
-        // set expectations with mocks
-
-        doAnswer(new Answer<Void>() {
-            public Void answer(InvocationOnMock invocation){
-                Handler<AsyncResult<String>> handler = invocation.getArgument(1);
-                handler.handle(Future.succeededFuture(null));
-                return null;
-             }
-         }).when(catalogService).addProduct(any(),any());
-
-        // setup: create a JSON object for a product
-
-        Async async = context.async();
-        String itemId = "111111";
-        JsonObject json = new JsonObject()
-                .put("itemId", itemId)
-                .put("name", "productName")
-                .put("desc", "productDescription")
-                .put("price", new Double(100.0));
-        String body = json.encodePrettily();
-        String length = Integer.toString(body.length());
-
-        // execute and perform assertions
-
-        vertx.createHttpClient().post(port, "localhost", "/products")
-            .exceptionHandler(context.exceptionHandler())
-            .putHeader("Content-type", "application/json")
-            .putHeader("Content-length", length)
-            .handler(response -> {
-                assertThat(response.statusCode(), equalTo(201));
-                ArgumentCaptor<Product> argument = ArgumentCaptor.forClass(Product.class);
-                verify(catalogService).addProduct(argument.capture(), any());
-                assertThat(argument.getValue().getItemId(), equalTo(itemId));
-                async.complete();
-            })
-            .write(body)
-            .end();
-    }
-
-    @Test
     public void testGetProducts(TestContext context) throws Exception {
-        
-        // setup: create two JSON objects for products
-
         String itemId1 = "111111";
         JsonObject json1 = new JsonObject()
                 .put("itemId", itemId1)
@@ -153,9 +108,6 @@ public class ApiVerticleTest {
         List<Product> products = new ArrayList<>();
         products.add(new Product(json1));
         products.add(new Product(json2));
-        
-        // set expectations with mocks
-
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation){
                 Handler<AsyncResult<List<Product>>> handler = invocation.getArgument(0);
@@ -163,8 +115,6 @@ public class ApiVerticleTest {
                 return null;
              }
          }).when(catalogService).getProducts(any());
-
-        // execute and perform assertions
 
         Async async = context.async();
         vertx.createHttpClient().get(port, "localhost", "/products", response -> {
@@ -189,9 +139,6 @@ public class ApiVerticleTest {
 
     @Test
     public void testGetProduct(TestContext context) throws Exception {
-
-        // setup: create a JSON object for a product
-
         String itemId = "111111";
         JsonObject json = new JsonObject()
                 .put("itemId", itemId)
@@ -199,9 +146,6 @@ public class ApiVerticleTest {
                 .put("desc", "productDescription1")
                 .put("price", new Double(100.0));
         Product product = new Product(json);
-
-        // set expectations with mocks
-
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation){
                 Handler<AsyncResult<Product>> handler = invocation.getArgument(1);
@@ -210,10 +154,8 @@ public class ApiVerticleTest {
              }
          }).when(catalogService).getProduct(eq("111111"),any());
 
-        // execute and perform assertions
-
         Async async = context.async();
-        vertx.createHttpClient().get(port, "localhost", "/products/111111", response -> {
+        vertx.createHttpClient().get(port, "localhost", "/product/111111", response -> {
                 assertThat(response.statusCode(), equalTo(200));
                 assertThat(response.headers().get("Content-type"), equalTo("application/json"));
                 response.bodyHandler(body -> {
@@ -232,9 +174,6 @@ public class ApiVerticleTest {
 
     @Test
     public void testGetNonExistingProduct(TestContext context) throws Exception {
-
-        // set expectations with mocks
-
         doAnswer(new Answer<Void>() {
             public Void answer(InvocationOnMock invocation){
                 Handler<AsyncResult<Product>> handler = invocation.getArgument(1);
@@ -243,16 +182,49 @@ public class ApiVerticleTest {
              }
          }).when(catalogService).getProduct(eq("111111"),any());
 
-        // execute and perform assertions
-
         Async async = context.async();
-        vertx.createHttpClient().get(port, "localhost", "/products/111111", response -> {
+        vertx.createHttpClient().get(port, "localhost", "/product/111111", response -> {
                 assertThat(response.statusCode(), equalTo(404));
                 async.complete();
             })
             .exceptionHandler(context.exceptionHandler())
             .end();
     }
+
+    @Test
+    public void testAddProduct(TestContext context) throws Exception {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation){
+                Handler<AsyncResult<String>> handler = invocation.getArgument(1);
+                handler.handle(Future.succeededFuture(null));
+                return null;
+             }
+         }).when(catalogService).addProduct(any(),any());
+
+        Async async = context.async();
+        String itemId = "111111";
+        JsonObject json = new JsonObject()
+                .put("itemId", itemId)
+                .put("name", "productName")
+                .put("desc", "productDescription")
+                .put("price", new Double(100.0));
+        String body = json.encodePrettily();
+        String length = Integer.toString(body.length());
+        vertx.createHttpClient().post(port, "localhost", "/product")
+            .exceptionHandler(context.exceptionHandler())
+            .putHeader("Content-type", "application/json")
+            .putHeader("Content-length", length)
+            .handler(response -> {
+                assertThat(response.statusCode(), equalTo(201));
+                ArgumentCaptor<Product> argument = ArgumentCaptor.forClass(Product.class);
+                verify(catalogService).addProduct(argument.capture(), any());
+                assertThat(argument.getValue().getItemId(), equalTo(itemId));
+                async.complete();
+            })
+            .write(body)
+            .end();
+    }
+
 
 
 }

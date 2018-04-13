@@ -9,9 +9,12 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.healthchecks.HealthCheckHandler;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 
 public class ApiVerticle extends AbstractVerticle {
 
@@ -24,16 +27,24 @@ public class ApiVerticle extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-        // create router
         Router router = Router.router(vertx);
-
-        // define routes
         router.get("/products").handler(this::getProducts);
-        router.get("/products/:itemId").handler(this::getProduct);
-        router.route("/products").handler(BodyHandler.create());
-        router.post("/products").handler(this::addProduct);
+        router.get("/product/:itemId").handler(this::getProduct);
+        router.route("/product").handler(BodyHandler.create());
+        router.post("/product").handler(this::addProduct);
 
-        // create http server and listen for incoming requests
+
+        // Health Checks
+
+        // TODO: Add Health Check code here for
+        //       - /health/readiness
+        //       - /health/liveness
+
+
+
+        // Static content for swagger docs
+        router.route().handler(StaticHandler.create());
+        
         vertx.createHttpServer()
             .requestHandler(router::accept)
             .listen(config().getInteger("catalog.http.port", 8080), result -> {
@@ -44,67 +55,51 @@ public class ApiVerticle extends AbstractVerticle {
                 }
             });
     }
-    
-    private void addProduct(RoutingContext routingContext) {
 
-        // get body content as JSON
-        JsonObject json = routingContext.getBodyAsJson();
-
-        // transform JSON payload to a Product object and add to service
-        catalogService.addProduct(new Product(json), ar -> {
-            if (ar.succeeded()) {
-            		routingContext.response().setStatusCode(201).end();
-            } else {
-            		routingContext.fail(ar.cause());
-            }
-        });
-    }
-    
-    private void getProducts(RoutingContext routingContext) {
-
-        // get the products
+    private void getProducts(RoutingContext rc) {
         catalogService.getProducts(ar -> {
-
             if (ar.succeeded()) {
-
-                // get the result
                 List<Product> products = ar.result();
-
-                // transform the List<Product> result to a JsonArray object
                 JsonArray json = new JsonArray();
                 products.stream()
                     .map(p -> p.toJson())
                     .forEach(p -> json.add(p));
-
-                // Write the JsonArray to the HttpServerResponse
-                routingContext.response()
+                rc.response()
                     .putHeader("Content-type", "application/json")
                     .end(json.encodePrettily());
             } else {
-                routingContext.fail(ar.cause());
+                rc.fail(ar.cause());
             }
         });
-
     }
-    
-    private void getProduct(RoutingContext routingContext) {
-    	
-        String itemId = routingContext.request().getParam("itemid");
-    
+
+    private void getProduct(RoutingContext rc) {
+        String itemId = rc.request().getParam("itemid");
         catalogService.getProduct(itemId, ar -> {
             if (ar.succeeded()) {
                 Product product = ar.result();
                 JsonObject json;
                 if (product != null) {
                     json = product.toJson();
-                    routingContext.response()
+                    rc.response()
                         .putHeader("Content-type", "application/json")
                         .end(json.encodePrettily());
                 } else {
-                    routingContext.fail(404);
+                    rc.fail(404);
                 }
             } else {
-                routingContext.fail(ar.cause());
+                rc.fail(ar.cause());
+            }
+        });
+    }
+
+    private void addProduct(RoutingContext rc) {
+        JsonObject json = rc.getBodyAsJson();
+        catalogService.addProduct(new Product(json), ar -> {
+            if (ar.succeeded()) {
+                rc.response().setStatusCode(201).end();
+            } else {
+                rc.fail(ar.cause());
             }
         });
     }
