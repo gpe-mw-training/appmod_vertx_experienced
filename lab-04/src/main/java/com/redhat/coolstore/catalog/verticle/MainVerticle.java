@@ -4,9 +4,6 @@ import com.redhat.coolstore.catalog.api.ApiVerticle;
 import com.redhat.coolstore.catalog.verticle.service.CatalogService;
 import com.redhat.coolstore.catalog.verticle.service.CatalogVerticle;
 
-import io.vertx.config.ConfigRetriever;
-import io.vertx.config.ConfigRetrieverOptions;
-import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
