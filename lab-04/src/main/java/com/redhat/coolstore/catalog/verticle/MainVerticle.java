@@ -4,6 +4,9 @@ import com.redhat.coolstore.catalog.api.ApiVerticle;
 import com.redhat.coolstore.catalog.verticle.service.CatalogService;
 import com.redhat.coolstore.catalog.verticle.service.CatalogVerticle;
 
+import io.jaegertracing.Configuration;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -49,6 +52,8 @@ public class MainVerticle extends AbstractVerticle {
     
     private void deployVerticles(JsonObject config, Future<Void> startFuture) {
 
+        initTracer(config);
+
         Future<String> apiVerticleFuture = Future.future();
         Future<String> catalogVerticleFuture = Future.future();
 
@@ -73,6 +78,41 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
         super.stop(stopFuture);
+    }
+
+    private void initTracer(JsonObject config) {
+
+        
+
+
+/*        String serviceName = config.getString("service-name");
+        if (serviceName == null || serviceName.isEmpty()) {
+            System.out.println("No Service Name set. Skipping initialization of the Jaeger Tracer.");
+            return;
+        }
+
+        Configuration configuration = new Configuration(serviceName)
+                .withSampler(new Configuration.SamplerConfiguration()
+                        .withType(config.getString("sampler-type"))
+                        .withParam(getPropertyAsNumber(config, "sampler-param"))
+                        .withManagerHostPort(config.getString("sampler-manager-host-port")))
+                .withReporter(new Configuration.ReporterConfiguration()
+                        .withLogSpans(config.getBoolean("reporter-log-spans"))
+                        .withFlushInterval(config.getInteger("reporter-flush-interval"))
+                        .withMaxQueueSize(config.getInteger("reporter-flush-interval"))
+                        .withSender(new Configuration.SenderConfiguration()
+                                .withAgentHost(config.getString("agent-host"))
+                                .withAgentPort(config.getInteger("agent-port"))));
+        GlobalTracer.register(configuration.getTracer());
+*/
+    }
+
+    private Number getPropertyAsNumber(JsonObject json, String key) {
+        Object o  = json.getValue(key);
+        if (o instanceof Number) {
+            return (Number) o;
+        }
+        return null;
     }
 
 }

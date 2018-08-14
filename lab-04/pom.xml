@@ -5,8 +5,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.redhat.coolstore</groupId>
-  <artifactId>catalog-service</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>catalog-service-tracing</artifactId>
+  <version>1.0.5</version>
 
   <packaging>jar</packaging>
 
@@ -44,6 +44,11 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-circuit-breaker</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.vertx</groupId>
@@ -129,6 +134,17 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+    </dependency>
+
+   <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-vertx-web</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jaegertracing</groupId>
+      <artifactId>jaeger-client</artifactId>
+      <version>0.30.4</version>
     </dependency>
 
   </dependencies>
@@ -225,14 +241,14 @@
 
   <repositories>
     <repository>
-      <id>redhat</id>
+      <id>redhat-ga</id>
       <url>https://maven.repository.redhat.com/ga/</url>
     </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
-      <id>redhat</id>
+      <id>redhat-ga</id>
       <url>https://maven.repository.redhat.com/ga/</url>
     </pluginRepository>
   </pluginRepositories>

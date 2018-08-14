@@ -5,6 +5,10 @@ import java.util.List;
 import com.redhat.coolstore.catalog.model.Product;
 import com.redhat.coolstore.catalog.verticle.service.CatalogService;
 
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.vertx.ext.web.TracingHandler;
+import io.opentracing.tag.Tags;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -16,9 +20,12 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
+import io.jaegertracing.Configuration;
+
 public class ApiVerticle extends AbstractVerticle {
 
     private CatalogService catalogService;
+    private Tracer tracer;
 
     public ApiVerticle(CatalogService catalogService) {
         this.catalogService = catalogService;
@@ -26,8 +33,17 @@ public class ApiVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
-
+    	
         Router router = Router.router(vertx);
+
+        tracer = Configuration.fromEnv().getTracer();
+        System.out.println("start() span = "+tracer.activeSpan());
+
+
+
+        TracingHandler tHandler = new TracingHandler(tracer);
+        router.route().order(-1).handler(tHandler).failureHandler(tHandler);
+
         router.get("/products").handler(this::getProducts);
         router.get("/product/:itemId").handler(this::getProduct);
         router.route("/product").handler(BodyHandler.create());
@@ -50,6 +66,7 @@ public class ApiVerticle extends AbstractVerticle {
         // Static content for swagger docs
         router.route().handler(StaticHandler.create());
         
+        
         vertx.createHttpServer()
             .requestHandler(router::accept)
             .listen(config().getInteger("catalog.http.port", 8080), result -> {
@@ -61,7 +78,15 @@ public class ApiVerticle extends AbstractVerticle {
             });
     }
 
+    
     private void getProducts(RoutingContext rc) {
+        Span span = tracer.buildSpan("getProducts")
+                .asChildOf(TracingHandler.serverSpanContext(rc))
+                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+                .startManual();
+
+        String itemId = rc.request().getParam("itemid");
+        
         catalogService.getProducts(ar -> {
             if (ar.succeeded()) {
                 List<Product> products = ar.result();
@@ -76,6 +101,8 @@ public class ApiVerticle extends AbstractVerticle {
                 rc.fail(ar.cause());
             }
         });
+        span.finish();
+        System.out.println("getProducts() ... just called span.finish()");
     }
 
     private void getProduct(RoutingContext rc) {
