@@ -1,16 +1,24 @@
 package com.redhat.coolstore.catalog.api;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.redhat.coolstore.catalog.model.Product;
 import com.redhat.coolstore.catalog.verticle.service.CatalogService;
 
+import io.opentracing.log.Fields;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.opentracing.tag.Tags;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
@@ -19,12 +27,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import io.jaegertracing.Configuration;
 
 public class ApiVerticle extends AbstractVerticle {
 
     private CatalogService catalogService;
+    private static final Logger log = LoggerFactory.getLogger(ApiVerticle.class);
+    
     private Tracer tracer;
 
     public ApiVerticle(CatalogService catalogService) {
@@ -33,14 +45,11 @@ public class ApiVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
-    	
+        
         Router router = Router.router(vertx);
 
         tracer = Configuration.fromEnv().getTracer();
-        System.out.println("start() span = "+tracer.activeSpan());
-
-
-
+        log.info("start() tracer service name = "+Configuration.fromEnv().getServiceName());
         TracingHandler tHandler = new TracingHandler(tracer);
         router.route().order(-1).handler(tHandler).failureHandler(tHandler);
 
@@ -77,32 +86,56 @@ public class ApiVerticle extends AbstractVerticle {
                 }
             });
     }
+    
+    private void dumpMultiMap(MultiMap mmap) {
+        Iterator<Entry<String, String>> mList = mmap.entries().iterator();
+        while(mList.hasNext()) {
+            Entry<String, String> mEntry = mList.next();
+            System.out.println("\ndumpMultiMap() \tkey = "+mEntry.getKey()+"\t value = "+mEntry.getValue());
+        }
+    }
 
     
     private void getProducts(RoutingContext rc) {
-        Span span = tracer.buildSpan("getProducts")
+        HttpServerRequest hRequest = rc.request();
+        MultiMap headers = hRequest.headers();
+        dumpMultiMap(headers);
+       
+        Span span = tracer.buildSpan("getProducts").start();
+        /* 
                 .asChildOf(TracingHandler.serverSpanContext(rc))
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
                 .startManual();
+        */
 
         String itemId = rc.request().getParam("itemid");
+        try (Scope scope = tracer.scopeManager().activate(span, false)) {
         
-        catalogService.getProducts(ar -> {
-            if (ar.succeeded()) {
-                List<Product> products = ar.result();
-                JsonArray json = new JsonArray();
-                products.stream()
-                    .map(p -> p.toJson())
-                    .forEach(p -> json.add(p));
-                rc.response()
-                    .putHeader("Content-type", "application/json")
-                    .end(json.encodePrettily());
-            } else {
-                rc.fail(ar.cause());
-            }
-        });
-        span.finish();
-        System.out.println("getProducts() ... just called span.finish()");
+            catalogService.getProducts(ar -> {
+                if (ar.succeeded()) {
+                    List<Product> products = ar.result();
+                    JsonArray json = new JsonArray();
+                    products.stream()
+                        .map(p -> p.toJson())
+                        .forEach(p -> json.add(p));
+                    rc.response()
+                        .putHeader("Content-type", "application/json")
+                        .end(json.encodePrettily());
+                } else {
+                    rc.fail(ar.cause());
+                }
+            });
+        } catch(Exception ex) {
+            Tags.ERROR.set(span, true);
+            Map logMap = new HashMap();
+            logMap.put(Fields.EVENT, "error");
+            logMap.put(Fields.ERROR_OBJECT, ex);
+            logMap.put(Fields.MESSAGE, ex.getMessage());
+            span.log( logMap );
+        } finally {
+            span.finish();
+            log.info("getProducts() span = "+span);
+        }
     }
 
     private void getProduct(RoutingContext rc) {
